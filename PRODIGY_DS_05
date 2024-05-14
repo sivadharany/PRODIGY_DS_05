@@ -1,0 +1,66 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import geopandas as gpd
+from shapely.geometry import Point
+
+# Load the dataset
+df = pd.read_csv('US_Accident_Data.csv')
+# Check for missing values and handle them appropriately
+df.isnull().sum()
+df.dropna(subset=['Weather_Condition', 'Road_Surface_Condition', 'Time'], inplace=True)
+
+# Convert relevant columns to appropriate data types
+df['Start_Time'] = pd.to_datetime(df['Start_Time'])
+# Analyze the distribution of accidents by weather conditions
+weather_counts = df['Weather_Condition'].value_counts()
+
+# Analyze the distribution of accidents by road surface conditions
+road_surface_counts = df['Road_Surface_Condition'].value_counts()
+
+# Analyze the distribution of accidents by time of day
+df['Hour'] = df['Start_Time'].dt.hour
+time_of_day_counts = df['Hour'].value_counts()
+# Group by weather condition and count accidents
+weather_patterns = df.groupby('Weather_Condition').size()
+
+# Group by road surface condition and count accidents
+road_surface_patterns = df.groupby('Road_Surface_Condition').size()
+
+# Group by time of day and count accidents
+time_of_day_patterns = df.groupby('Hour').size()
+
+# Plot the distribution of accidents by weather condition
+plt.figure(figsize=(10, 6))
+sns.barplot(x=weather_counts.index, y=weather_counts.values)
+plt.title('Accidents by Weather Condition')
+plt.xticks(rotation=45)
+plt.show()
+
+# Plot the distribution of accidents by road surface condition
+plt.figure(figsize=(10, 6))
+sns.barplot(x=road_surface_counts.index, y=road_surface_counts.values)
+plt.title('Accidents by Road Surface Condition')
+plt.xticks(rotation=45)
+plt.show()
+
+# Plot the distribution of accidents by time of day
+plt.figure(figsize=(10, 6))
+sns.lineplot(x=time_of_day_counts.index, y=time_of_day_counts.values)
+plt.title('Accidents by Time of Day')
+plt.xticks(rotation=45)
+plt.show()
+
+# Convert latitude and longitude to Point objects
+df['geometry'] = df.apply(lambda row: Point(row['Start_Lng'], row['Start_Lat']), axis=1)
+
+# Create a GeoDataFrame
+gdf = gpd.GeoDataFrame(df, geometry='geometry')
+
+# Plot the accidents on a map
+fig, ax = plt.subplots(figsize=(10, 6))
+gdf.plot(ax=ax, column='Severity', cmap='viridis', legend=True)
+plt.title('Accident Hotspots')
+plt.show()
+# Analyze the correlation between different factors and the severity of accidents
+correlation_
